@@ -7,6 +7,7 @@ let testUserAuthToken;
 let registerRes;
 let adminLoginRes;
 let admin;
+let franchiseName = randomName();
 
 beforeAll(async () => {
     testUser.email = Math.random().toString(36).substring(2, 12) + '@test.com';
@@ -33,6 +34,26 @@ test('list users franchises', async () => {
     expect(franchiseListRes.body).toEqual([]); // new user shouldn't have any franchises
 });
 
+test('create franchise', async () => {
+    const newFranchise = { name: franchiseName, admins: [admin]};
+
+    const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminLoginRes.body.token}`).send(newFranchise);
+
+    expect(createFranchiseRes.status).toBe(200);
+    expect(createFranchiseRes.body.name).toBe(franchiseName);
+    expect(createFranchiseRes.body.admins).toEqual([admin]);
+});
+
+test('delete franchise', async () => {
+    const newFranchise = { name: franchiseName, admins: [admin]};
+
+    const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminLoginRes.body.token}`).send(newFranchise);
+
+    const deleteFranchiseRes = await request(app).delete(`/api/franchise/${createFranchiseRes.body.id}`).set('Authorization', `Bearer ${adminLoginRes.body.token}`).send(newFranchise);
+
+    expect(deleteFranchiseRes.status).toBe(200);
+    expect(deleteFranchiseRes.body.message).toBe('franchise deleted');
+});
 
 function expectValidJwt(potentialJwt) {
     expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
