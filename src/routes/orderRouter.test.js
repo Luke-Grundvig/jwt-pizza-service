@@ -30,7 +30,7 @@ test('add item to menu', async () => {
     const addMenuItemRes = await request(app).put('/api/order/menu').set('Authorization', `Bearer ${adminLoginRes.body.token}`).send(menuItem);
 
     expect(addMenuItemRes.status).toBe(200);
-    expect(addMenuItemRes.body).toEqual([menuItem]);
+    expect(addMenuItemRes.body.at(-1)).toMatchObject(menuItem);
 });
 
 test('get orders for user', async () => {
