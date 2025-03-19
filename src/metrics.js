@@ -124,6 +124,10 @@ class Metrics {
 
         httpMetrics(buf) {
             buf.addMetric("total_http_requests", this.total_http_requests, 'sum', '1');
+            buf.addMetric("get_requests", this.get_requests, 'sum', '1');
+            buf.addMetric("put_requests", this.put_requests, 'sum', '1');
+            buf.addMetric("post_requests", this.post_requests, 'sum', '1');
+            buf.addMetric("delete_requests", this.delete_requests, 'sum', '1');
         }
 }
 
@@ -161,6 +165,6 @@ class MetricBuilder {
 }
 
 const metrics = new Metrics();
-//metrics.sendMetricsPeriodically(1000);
-metrics.sendMetricsPeriodically(100000);
+metrics.sendMetricsPeriodically(1000);
+//metrics.sendMetricsPeriodically(100000);
 module.exports = metrics;
