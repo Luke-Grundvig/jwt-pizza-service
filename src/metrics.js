@@ -114,7 +114,7 @@ class Metrics {
               //authMetrics(buf);
         
               //const metrics = buf.toString('\n');
-              this.sendMetricToGrafana(buf);
+              this.sendMetricToGrafana(buf.metrics);
             } catch (error) {
               console.log('Error sending metrics', error);
             }
@@ -153,8 +153,8 @@ class MetricBuilder {
           }
 
         if (type === 'sum') {
-            metric[0][type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
-            metric[0][type].isMonotonic = true;
+            metric[type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
+            metric[type].isMonotonic = true;
           }
         this.metrics.push(metric);
     }
