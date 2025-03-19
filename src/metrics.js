@@ -37,7 +37,7 @@ class Metrics {
     }
 
     pizzaTransaction(pizzasSold, revenue, failed, latency) {
-        this.pizzasSold += pizzasSold;
+        this.pizzasSold += (typeof pizzasSold === 'number' && !isNaN(pizzasSold)) ? pizzasSold : 0;
         this.revenue += revenue;
         if (failed) {
             this.creationFailures++;
