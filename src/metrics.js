@@ -144,8 +144,8 @@ class Metrics {
         }
 
         userMetrics(buf) {
-            buf.addMetric("creation_latency", this.creationLatency, 'histogram', 'ms');
-            buf.addMetric("request_latency", this.requestLatency, 'histogram', 'ms');
+            buf.addMetric("creation_latency", this.creationLatency, 'sum', '1');
+            buf.addMetric("request_latency", this.requestLatency, 'sum', '1');
         }
 
         purchaseMetrics(buf) {
@@ -202,10 +202,8 @@ class MetricBuilder {
         if (type === 'sum') {
             metric[type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
             metric[type].isMonotonic = true;
-          } else if (type === 'histogram') {
-            metric[type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_DELTA';
-        }
-        
+          }
+
         this.metrics.push(metric);
     }
 }
