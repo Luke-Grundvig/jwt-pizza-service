@@ -158,10 +158,6 @@ class MetricBuilder {
           }
         this.metrics.push(metric);
     }
-
-    /*toString(separator) {
-        return this.metrics.join(', ' + separator);
-    }*/
 }
 
 const metrics = new Metrics();
