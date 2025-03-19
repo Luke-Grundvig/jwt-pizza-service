@@ -17,7 +17,7 @@ class Metrics {
         this.revenue = 0.0;
         this.creationFailures = 0;
 
-        this.requestLatency = [];
+        this.requestLatency = 0.0;
         this.creationLatency = 0.0;
     }
 
@@ -27,7 +27,7 @@ class Metrics {
     
             res.on('finish', () => {
                 const latency = Date.now() - startTime;
-                this.updateRequestLatency(latency);
+                this.requestLatency = latency;
             });
     
             this.total_http_requests++;
@@ -43,16 +43,6 @@ class Metrics {
             this.creationFailures++;
         }
         this.creationLatency = latency;
-    }
-
-    getAverageLatency() {
-        if (this.creationLatency.length === 0) return 0;
-        const sum = this.creationLatency.reduce((acc, val) => acc + val, 0);
-        return sum / this.creationLatency.length;
-    }
-
-    updateRequestLatency(latency) {
-        this.requestLatency.push(latency);
     }
 
     incSuccessAuth() {
@@ -155,7 +145,7 @@ class Metrics {
 
         userMetrics(buf) {
             buf.addMetric("creation_latency", this.creationLatency, 'histogram', 'ms');
-            buf.addMetric("request_latency", this.getAverageLatency(), 'histogram', 'ms');
+            buf.addMetric("request_latency", this.requestLatency, 'histogram', 'ms');
         }
 
         purchaseMetrics(buf) {
