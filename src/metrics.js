@@ -1,25 +1,5 @@
 const config = require('./config');
-//const os = require('os');
-
-/*
-Http requests by method/minute - total, get, put, post, and delete
-active users
-authentication attemps/min successful and failed
-cpu and memory usage percentage
-pizzas - sold/min, creation failures, revenue/min
-latency - service endpoint and pizza creation
-*/
-
-/*setInterval(() => {
-  const cpuValue = Math.floor(Math.random() * 100) + 1;
-  sendMetricToGrafana('cpu', cpuValue, 'gauge', '%');
-
-  requests += Math.floor(Math.random() * 200) + 1;
-  sendMetricToGrafana('requests', requests, 'sum', '1');
-
-  latency += Math.floor(Math.random() * 200) + 1;
-  sendMetricToGrafana('latency', latency, 'sum', 'ms');
-}, 1000);*/
+const os = require('os');
 
 class Metrics {
     constructor() {
@@ -74,9 +54,6 @@ class Metrics {
         }
     }
 
-
-
-
     sendMetricToGrafana(metrics) {
         const metric = {
           resourceMetrics: [
@@ -111,10 +88,10 @@ class Metrics {
       }
       
       
-        /*getCpuUsagePercentage() {
+        getCpuUsagePercentage() {
         const cpuUsage = os.loadavg()[0] / os.cpus().length;
         return cpuUsage.toFixed(2) * 100;
-      }
+        }
       
        getMemoryUsagePercentage() {
         const totalMemory = os.totalmem();
@@ -122,25 +99,35 @@ class Metrics {
         const usedMemory = totalMemory - freeMemory;
         const memoryUsage = (usedMemory / totalMemory) * 100;
         return memoryUsage.toFixed(2);
-      }*/
+        }
       
        sendMetricsPeriodically(period) {
           const timer = setInterval(() => {
             try {
               const buf = new MetricBuilder();
               this.httpMetrics(buf);
-              //systemMetrics(buf);
-              //userMetrics(buf);
-              //purchaseMetrics(buf);
-              //authMetrics(buf);
+              this.systemMetrics(buf);
+              //this.userMetrics(buf);
+              //this.purchaseMetrics(buf);
+              this.authMetrics(buf);
         
-              //const metrics = buf.toString('\n');
               this.sendMetricToGrafana(buf.metrics);
             } catch (error) {
               console.log('Error sending metrics', error);
             }
           }, period);
           timer.unref();
+        }
+
+        systemMetrics(buf) {
+            buf.addMetric("cpu_usage", this.getCpuUsagePercentage(), 'gauge', '%');
+            buf.addMetric("memory_usage", this.getMemoryUsagePercentage(), 'gauge', '%');
+        }
+
+        authMetrics(buf) {
+            buf.addMetric("success_auth", this.successAuth, 'sum', '1');
+            buf.addMetric("failed_auth", this.failedAuth, 'sum', '1');
+            buf.addMetric("active_users", this.activeUsers, 'sum', '1');
         }
 
         httpMetrics(buf) {
@@ -187,5 +174,4 @@ class MetricBuilder {
 
 const metrics = new Metrics();
 metrics.sendMetricsPeriodically(1000);
-//metrics.sendMetricsPeriodically(100000);
 module.exports = metrics;
