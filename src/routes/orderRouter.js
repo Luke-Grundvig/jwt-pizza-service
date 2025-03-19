@@ -89,7 +89,7 @@ orderRouter.post(
     const j = await r.json();
     const end = Date.now();
     const latency = end - start;
-    const pizzasSold = orderReq.items.lenght;
+    const pizzasSold = orderReq.items.length;
     const revenue = orderReq.items.reduce((acc, item) => acc + item.price, 0);
     if (r.ok) {
       metrics.pizzaTransaction(pizzasSold, revenue, false, latency);
