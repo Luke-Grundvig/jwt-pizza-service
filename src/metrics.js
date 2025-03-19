@@ -28,6 +28,9 @@ class Metrics {
         this.put_requests = 0;
         this.post_requests = 0;
         this.delete_requests = 0;
+        this.successAuth = 0;
+        this.failedAuth = 0;
+        this.activeUsers = 0;
     }
 
     requestTracker() {
@@ -36,6 +39,22 @@ class Metrics {
             this.incrementSpecificRequest(req.method);
             next();
         }
+    }
+
+    incSuccessAuth() {
+        this.successAuth++;
+    }
+
+    incFailAuth() {
+        this.successAuth++;
+    }
+
+    incActiveUser() {
+        this.activeUsers++;
+    }
+
+    decActiveUser() {
+        this.activeUsers--;
     }
 
     incrementSpecificRequest(method) {
@@ -54,6 +73,8 @@ class Metrics {
                 break;
         }
     }
+
+
 
 
     sendMetricToGrafana(metrics) {
