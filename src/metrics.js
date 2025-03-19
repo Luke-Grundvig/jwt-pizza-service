@@ -1,5 +1,6 @@
 const config = require('./config');
-const os = require('os');
+//const os = require('os');
+
 /*
 Http requests by method/minute - total, get, put, post, and delete
 active users
@@ -21,37 +22,53 @@ latency - service endpoint and pizza creation
 }, 1000);*/
 
 class Metrics {
-    sendMetricToGrafana(metricName, metricValue, type, unit) {
+    constructor() {
+        this.total_http_requests = 0;
+        this.get_requests = 0;
+        this.put_requests = 0;
+        this.post_requests = 0;
+        this.delete_requests = 0;
+    }
+
+    requestTracker() {
+        return (req, res, next) => {
+            this.total_http_requests++;
+            this.incrementSpecificRequest(req.method);
+            next();
+        }
+    }
+
+    incrementSpecificRequest(method) {
+        switch(method) {
+            case 'GET':
+                this.get_requests++;
+                break;
+            case 'POST':
+                this.post_requests++;
+                break;
+            case 'PUT':
+                this.put_requests++;
+                break;
+            case 'DELETE':
+                this.delete_requests++;
+                break;
+        }
+    }
+
+
+    sendMetricToGrafana(metrics) {
         const metric = {
           resourceMetrics: [
             {
               scopeMetrics: [
                 {
-                  metrics: [
-                    {
-                      name: metricName,
-                      unit: unit,
-                      [type]: {
-                        dataPoints: [
-                          {
-                            asInt: metricValue,
-                            timeUnixNano: Date.now() * 1000000,
-                          },
-                        ],
-                      },
-                    },
-                  ],
+                  metrics: metrics,
                 },
               ],
             },
           ],
         };
-      
-        if (type === 'sum') {
-          metric.resourceMetrics[0].scopeMetrics[0].metrics[0][type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
-          metric.resourceMetrics[0].scopeMetrics[0].metrics[0][type].isMonotonic = true;
-        }
-      
+
         const body = JSON.stringify(metric);
         fetch(`${config.url}`, {
           method: 'POST',
@@ -73,7 +90,7 @@ class Metrics {
       }
       
       
-        getCpuUsagePercentage() {
+        /*getCpuUsagePercentage() {
         const cpuUsage = os.loadavg()[0] / os.cpus().length;
         return cpuUsage.toFixed(2) * 100;
       }
@@ -84,23 +101,69 @@ class Metrics {
         const usedMemory = totalMemory - freeMemory;
         const memoryUsage = (usedMemory / totalMemory) * 100;
         return memoryUsage.toFixed(2);
-      }
+      }*/
       
        sendMetricsPeriodically(period) {
           const timer = setInterval(() => {
             try {
               const buf = new MetricBuilder();
-              httpMetrics(buf);
-              systemMetrics(buf);
-              userMetrics(buf);
-              purchaseMetrics(buf);
-              authMetrics(buf);
+              this.httpMetrics(buf);
+              //systemMetrics(buf);
+              //userMetrics(buf);
+              //purchaseMetrics(buf);
+              //authMetrics(buf);
         
-              const metrics = buf.toString('\n');
-              this.sendMetricToGrafana(metrics);
+              //const metrics = buf.toString('\n');
+              this.sendMetricToGrafana(buf);
             } catch (error) {
               console.log('Error sending metrics', error);
             }
           }, period);
+          timer.unref();
+        }
+
+        httpMetrics(buf) {
+            buf.addMetric("total_http_requests", this.total_http_requests, 'sum', '1');
         }
 }
+
+class MetricBuilder {
+    constructor() {
+        this.metrics = [];
+    }
+
+    addMetric(name, value, type, unit) {
+        const metric = {
+            name: name,
+            unit: unit,
+            [type]: {
+              dataPoints: [
+                {
+                  asInt: value,
+                  timeUnixNano: Date.now() * 1000000,
+                  attributes: [
+                    {
+                        key: "source",
+                        value: {stringValue: config.metrics.source}
+                    }
+                  ]
+                },
+              ],
+            },
+          }
+
+        if (type === 'sum') {
+            metric[0][type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
+            metric[0][type].isMonotonic = true;
+          }
+        this.metrics.push(metric);
+    }
+
+    /*toString(separator) {
+        return this.metrics.join(', ' + separator);
+    }*/
+}
+
+const metrics = new Metrics();
+metrics.sendMetricsPeriodically(1000);
+module.exports = metrics;
