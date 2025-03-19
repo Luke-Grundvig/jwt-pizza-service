@@ -8,9 +8,17 @@ class Metrics {
         this.put_requests = 0;
         this.post_requests = 0;
         this.delete_requests = 0;
+
         this.successAuth = 0;
         this.failedAuth = 0;
         this.activeUsers = 0;
+
+        this.pizzasSold = 0;//still to do
+        this.revenue = 0.0;
+        this.creationFailures = 0;
+
+        this.serviceLatency = 0.0;
+        this.creationLatcency = 0.0;
     }
 
     requestTracker() {
@@ -19,6 +27,15 @@ class Metrics {
             this.incrementSpecificRequest(req.method);
             next();
         }
+    }
+
+    pizzaTransaction(pizzasSold, revenue, failed, latency) {
+        this.pizzasSold += pizzasSold;
+        this.revenue += revenue;
+        if (failed) {
+            this.creationFailures++;
+        }
+        this.creationLatcency = latency;
     }
 
     incSuccessAuth() {
@@ -108,7 +125,7 @@ class Metrics {
               this.httpMetrics(buf);
               this.systemMetrics(buf);
               //this.userMetrics(buf);
-              //this.purchaseMetrics(buf);
+              this.purchaseMetrics(buf);
               this.authMetrics(buf);
         
               this.sendMetricToGrafana(buf.metrics);
@@ -117,6 +134,12 @@ class Metrics {
             }
           }, period);
           timer.unref();
+        }
+
+        purchaseMetrics(buf) {
+            buf.addMetric("pizzas_sold", this.pizzasSold, 'sum', '1');
+            buf.addMetric("revenue", this.revenue, 'sum', '1');
+            buf.addMetric("creation_failures", this.creationFailures, 'sum', '1');
         }
 
         systemMetrics(buf) {
@@ -151,7 +174,7 @@ class MetricBuilder {
             [type]: {
               dataPoints: [
                 {
-                  asInt: value,
+                  asDouble: value,
                   timeUnixNano: Date.now() * 1000000,
                   attributes: [
                     {
