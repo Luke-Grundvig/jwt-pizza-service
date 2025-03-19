@@ -13,20 +13,27 @@ class Metrics {
         this.failedAuth = 0;
         this.activeUsers = 0;
 
-        this.pizzasSold = 0;//still to do
+        this.pizzasSold = 0;
         this.revenue = 0.0;
         this.creationFailures = 0;
 
-        this.serviceLatency = 0.0;
-        this.creationLatcency = 0.0;
+        this.requestLatency = [];
+        this.creationLatency = 0.0;
     }
 
     requestTracker() {
         return (req, res, next) => {
+            const startTime = Date.now();
+    
+            res.on('finish', () => {
+                const latency = Date.now() - startTime;
+                this.updateRequestLatency(latency);
+            });
+    
             this.total_http_requests++;
             this.incrementSpecificRequest(req.method);
             next();
-        }
+        };
     }
 
     pizzaTransaction(pizzasSold, revenue, failed, latency) {
@@ -35,7 +42,17 @@ class Metrics {
         if (failed) {
             this.creationFailures++;
         }
-        this.creationLatcency = latency;
+        this.creationLatency = latency;
+    }
+
+    getAverageLatency() {
+        if (this.creationLatency.length === 0) return 0;
+        const sum = this.creationLatency.reduce((acc, val) => acc + val, 0);
+        return sum / this.creationLatency.length;
+    }
+
+    updateRequestLatency(latency) {
+        this.requestLatency.push(latency);
     }
 
     incSuccessAuth() {
@@ -124,7 +141,7 @@ class Metrics {
               const buf = new MetricBuilder();
               this.httpMetrics(buf);
               this.systemMetrics(buf);
-              //this.userMetrics(buf);
+              this.userMetrics(buf);
               this.purchaseMetrics(buf);
               this.authMetrics(buf);
         
@@ -134,6 +151,11 @@ class Metrics {
             }
           }, period);
           timer.unref();
+        }
+
+        userMetrics(buf) {
+            buf.addMetric("creation_latency", this.creationLatency, 'histogram', 'ms');
+            buf.addMetric("request_latency", this.getAverageLatency(), 'histogram', 'ms');
         }
 
         purchaseMetrics(buf) {
@@ -196,5 +218,5 @@ class MetricBuilder {
 }
 
 const metrics = new Metrics();
-metrics.sendMetricsPeriodically(1000);
+metrics.sendMetricsPeriodically(5000);
 module.exports = metrics;
