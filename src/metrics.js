@@ -144,8 +144,8 @@ class Metrics {
         }
 
         userMetrics(buf) {
-            buf.addMetric("creation_latency", this.creationLatency, 'sum', '1');
-            buf.addMetric("request_latency", this.requestLatency, 'sum', '1');
+            buf.addMetric("creation_latency", this.creationLatency, 'gauge', 'ms');
+            buf.addMetric("request_latency", this.requestLatency, 'gauge', 'ms');
         }
 
         purchaseMetrics(buf) {
