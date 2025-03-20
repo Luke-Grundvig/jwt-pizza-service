@@ -51,7 +51,7 @@ class Metrics {
     }
 
     incFailAuth() {
-        this.successAuth++;
+        this.failedAuth++;
     }
 
     incActiveUser() {
