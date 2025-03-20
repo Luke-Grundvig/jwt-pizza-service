@@ -75,7 +75,7 @@ authRouter.post(
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
     const auth = await setAuth(user);
     res.json({ user: user, token: auth });
-    if(res.status != 200) {
+    if(!user) {
       metrics.incFailAuth();
     } else {
       metrics.incSuccessAuth();
@@ -92,7 +92,7 @@ authRouter.put(
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
     res.json({ user: user, token: auth });
-    if(res.status != 200) {
+    if(!user) {
       metrics.incFailAuth();
     } else {
       metrics.incSuccessAuth();
@@ -108,12 +108,7 @@ authRouter.delete(
   asyncHandler(async (req, res) => {
     await clearAuth(req);
     res.json({ message: 'logout successful' });
-    if(res.status != 200) {
-      metrics.incFailAuth();
-    } else {
-      metrics.incSuccessAuth();
       metrics.decActiveUser();
-    }
   })
 );
 

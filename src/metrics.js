@@ -19,6 +19,7 @@ class Metrics {
 
         this.requestLatency = 0.0;
         this.creationLatency = 0.0;
+        this.creationCount = 0;
     }
 
     requestTracker() {
@@ -27,7 +28,7 @@ class Metrics {
     
             res.on('finish', () => {
                 const latency = Date.now() - startTime;
-                this.requestLatency = latency;
+                this.requestLatency += latency;
             });
     
             this.total_http_requests++;
@@ -144,8 +145,9 @@ class Metrics {
         }
 
         userMetrics(buf) {
-            buf.addMetric("creation_latency", this.creationLatency, 'gauge', 'ms');
-            buf.addMetric("request_latency", this.requestLatency, 'gauge', 'ms');
+            buf.addMetric("creation_latency", this.creationLatency, 'gauge', '1');
+            buf.addMetric("request_latency", this.requestLatency, 'gauge', '1');
+            buf.addMetric("creation_count", this.creationCount, 'sum', '1');
         }
 
         purchaseMetrics(buf) {
