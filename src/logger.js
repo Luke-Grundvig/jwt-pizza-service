@@ -1,12 +1,24 @@
 const config = require('./config.js');
 
+/*
+HTTP requests
+- HTTP method, path, status code
+- If the request has an authorization header
+- Request body
+- Response body
+
+Factory service requests
+
+Any unhandled exceptions
+*/
+
 class Logger {
   httpLogger = (req, res, next) => {
     let send = res.send;
     res.send = (resBody) => {
       const logData = {
         authorized: !!req.headers.authorization,
-        path: req.originalUrl,
+        path: req.path,
         method: req.method,
         statusCode: res.statusCode,
         reqBody: JSON.stringify(req.body),
@@ -19,6 +31,18 @@ class Logger {
     };
     next();
   };
+
+  dbLogger(query) {
+    this.log('info', 'db', query);
+  }
+
+  factoryLogger(orderInfo) {
+    this.log('info', 'factory', orderInfo);
+  }
+
+  unhandledErrorLogger(err) {
+    this.log('error', 'unhandledError', { message: err.message, status: err.statusCode });
+  }
 
   log(level, type, logData) {
     const labels = { component: config.logging.source, level: level, type: type };
@@ -40,7 +64,9 @@ class Logger {
 
   sanitize(logData) {
     logData = JSON.stringify(logData);
-    return logData.replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
+    logData = logData.replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
+    logData = logData.replace(/\\password\\=\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
+    return logData;
   }
 
   sendLogToGrafana(event) {
