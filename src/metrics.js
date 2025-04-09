@@ -211,5 +211,5 @@ class MetricBuilder {
 }
 
 const metrics = new Metrics();
-metrics.sendMetricsPeriodically(5000);
+//metrics.sendMetricsPeriodically(5000);
 module.exports = metrics;
