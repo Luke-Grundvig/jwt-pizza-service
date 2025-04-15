@@ -76,26 +76,34 @@ class DB {
     }
   }
 
-  async updateUser(userId, email, password) {
-    const connection = await this.getConnection();
-    try {
-      const params = [];
-      if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        params.push(`password='${hashedPassword}'`);
-      }
-      if (email) {
-        params.push(`email='${email}'`);
-      }
-      if (params.length > 0) {
-        const query = `UPDATE user SET ${params.join(', ')} WHERE id=${userId}`;
-        await this.query(connection, query);
-      }
-      return this.getUser(email, password);
-    } finally {
-      connection.end();
+async updateUser(userId, email, password) {
+  const connection = await this.getConnection();
+  try {
+    const updates = [];
+    const values = [];
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updates.push('password = ?');
+      values.push(hashedPassword);
     }
+
+    if (email) {
+      updates.push('email = ?');
+      values.push(email);
+    }
+
+    if (updates.length > 0) {
+      values.push(userId); // userId goes last for the WHERE clause
+      const query = `UPDATE user SET ${updates.join(', ')} WHERE id = ?`;
+      await this.query(connection, query, values);
+    }
+
+    return this.getUser(email, password);
+  } finally {
+    connection.end();
   }
+}
 
   async loginUser(userId, token) {
     token = this.getTokenSignature(token);
